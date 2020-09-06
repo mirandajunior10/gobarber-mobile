@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useCallback } from 'react';
 import {
   Image,
   KeyboardAvoidingView,
@@ -8,6 +8,8 @@ import {
 import Icon from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
 // eslint-disable-next-line object-curly-newline
+import { Form } from '@unform/mobile';
+import { FormHandles } from '@unform/core';
 import { Container, Title, BackToSignIn, BackToSignInText } from './styles';
 import logoImg from '../../assets/logo.png';
 import Input from '../../components/Input';
@@ -15,7 +17,10 @@ import Button from '../../components/Button';
 
 const SignUp: React.FC = () => {
   const navigation = useNavigation();
-
+  const formRef = useRef<FormHandles>(null);
+  const handleSignIn = useCallback((data: Record<string, unknown>) => {
+    console.log(data);
+  }, []);
   return (
     <>
       <KeyboardAvoidingView
@@ -31,10 +36,14 @@ const SignUp: React.FC = () => {
             <Image source={logoImg} />
 
             <Title>Crie sua conta</Title>
-            <Input name="name" icon="user" placeholder="E-mail" />
-            <Input name="email" icon="mail" placeholder="E-mail" />
-            <Input name="password" icon="lock" placeholder="Senha" />
-            <Button>Cadastrar</Button>
+            <Form ref={formRef} onSubmit={handleSignIn}>
+              <Input name="name" icon="user" placeholder="E-mail" />
+              <Input name="email" icon="mail" placeholder="E-mail" />
+              <Input name="password" icon="lock" placeholder="Senha" />
+            </Form>
+            <Button onPress={() => formRef.current?.submitForm()}>
+              Cadastrar
+            </Button>
           </Container>
         </ScrollView>
       </KeyboardAvoidingView>
