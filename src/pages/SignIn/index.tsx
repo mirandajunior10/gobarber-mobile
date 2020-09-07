@@ -6,7 +6,10 @@ import {
   ScrollView,
   View,
   TextInput,
+  Alert,
 } from 'react-native';
+import * as Yup from 'yup';
+
 import Icon from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
 import { Form } from '@unform/mobile';
@@ -22,15 +25,51 @@ import {
 import logoImg from '../../assets/logo.png';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
+import getValidationErrors from '../../utils/getValidationErrors';
+
+interface SignInFormData {
+  email: string;
+  password: string;
+}
 
 const SignIn: React.FC = () => {
   const navigation = useNavigation();
   const formRef = useRef<FormHandles>(null);
   const passwordInputRef = useRef<TextInput>(null);
 
-  const handleSignIn = useCallback((data: Record<string, unknown>) => {
-    console.log(data);
-  }, []);
+  const handleSignIn = useCallback(
+    async (data: SignInFormData) => {
+      try {
+        formRef.current?.setErrors({});
+        const schema = Yup.object().shape({
+          email: Yup.string()
+            .required('E-mail obrigatório')
+            .email('Digite um e-mail válido'),
+          password: Yup.string().min(6, 'No mínimo 6 digitos'),
+        });
+        await schema.validate(data, { abortEarly: false });
+        // await signIn({ email: data.email, password: data.password });
+        navigation.navigate('/dashboard');
+      } catch (err) {
+        if (err instanceof Yup.ValidationError) {
+          const validationErrors = getValidationErrors(err);
+          formRef.current?.setErrors(validationErrors);
+          return;
+        }
+
+        Alert.alert(
+          'Erro na autentição',
+          'Ocorreu um erro ao fazer login, cheque as credenciais',
+        );
+        /* addToast({
+          type: 'error',
+          title: 'Aconteceu um erro',
+          description: 'Ocorreu um erro ao fazer login, cheque as credenciais',
+        }); */
+      }
+    },
+    [navigation],
+  );
   return (
     <>
       <KeyboardAvoidingView

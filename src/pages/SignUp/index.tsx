@@ -5,7 +5,10 @@ import {
   Platform,
   ScrollView,
   TextInput,
+  Alert,
 } from 'react-native';
+import * as Yup from 'yup';
+
 import Icon from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
 // eslint-disable-next-line object-curly-newline
@@ -15,16 +18,63 @@ import { Container, Title, BackToSignIn, BackToSignInText } from './styles';
 import logoImg from '../../assets/logo.png';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
+import getValidationErrors from '../../utils/getValidationErrors';
 
+interface SignUpFormData {
+  name: string;
+  email: string;
+  password: string;
+}
 const SignUp: React.FC = () => {
   const navigation = useNavigation();
   const formRef = useRef<FormHandles>(null);
   const passwordInputRef = useRef<TextInput>(null);
   const emailInputRef = useRef<TextInput>(null);
 
-  const handleSignIn = useCallback((data: Record<string, unknown>) => {
-    console.log(data);
-  }, []);
+  const handleSignIn = useCallback(
+    async (data: SignUpFormData) => {
+      try {
+        formRef.current?.setErrors({});
+        const schema = Yup.object().shape({
+          name: Yup.string().required('Nome obrigatório'),
+          email: Yup.string()
+            .required('E-mail obrigatório')
+            .email('Digite um e-mail válido'),
+          password: Yup.string().min(6, 'No mínimo 6 digitos'),
+        });
+        await schema.validate(data, { abortEarly: false });
+
+        /*  await api.post('/users', data);
+        history.push('/'); */
+        Alert.alert(
+          'Cadastro realizado',
+          'Você já pode realizar seu logon np GoBarber!',
+        );
+        /*  addToast({
+          type: 'success',
+          title: 'Cadastro realizado',
+          description: 'Você já pode realizar seu logon np GoBarber!',
+        }); */
+        navigation.goBack();
+      } catch (err) {
+        if (err instanceof Yup.ValidationError) {
+          const validationErrors = getValidationErrors(err);
+          formRef.current?.setErrors(validationErrors);
+          return;
+        }
+        Alert.alert(
+          'Erro no cadastro',
+          'Ocorreu um erro ao fazer o cadastro, tente novamente',
+        );
+        /* addToast({
+          type: 'error',
+          title: 'Erro no cadastro',
+          description: 'Ocorreu um erro ao fazer o cadastro, tente novamente',
+        }); */
+      }
+    },
+    [navigation],
+  );
   return (
     <>
       <KeyboardAvoidingView
