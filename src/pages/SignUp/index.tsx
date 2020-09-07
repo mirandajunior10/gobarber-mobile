@@ -19,6 +19,7 @@ import logoImg from '../../assets/logo.png';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
 import getValidationErrors from '../../utils/getValidationErrors';
+import api from '../../services/api';
 
 interface SignUpFormData {
   name: string;
@@ -44,17 +45,11 @@ const SignUp: React.FC = () => {
         });
         await schema.validate(data, { abortEarly: false });
 
-        /*  await api.post('/users', data);
-        history.push('/'); */
+        await api.post('/users', data);
         Alert.alert(
           'Cadastro realizado',
-          'Você já pode realizar seu logon np GoBarber!',
+          'Você já pode realizar seu login na aplicação!',
         );
-        /*  addToast({
-          type: 'success',
-          title: 'Cadastro realizado',
-          description: 'Você já pode realizar seu logon np GoBarber!',
-        }); */
         navigation.goBack();
       } catch (err) {
         if (err instanceof Yup.ValidationError) {

@@ -48,8 +48,12 @@ const SignIn: React.FC = () => {
           password: Yup.string().min(6, 'No mínimo 6 digitos'),
         });
         await schema.validate(data, { abortEarly: false });
-        // await signIn({ email: data.email, password: data.password });
-        navigation.navigate('/dashboard');
+        const response = await signIn({
+          email: data.email,
+          password: data.password,
+        });
+        console.log(response);
+        // navigation.navigate('/dashboard');
       } catch (err) {
         if (err instanceof Yup.ValidationError) {
           const validationErrors = getValidationErrors(err);
