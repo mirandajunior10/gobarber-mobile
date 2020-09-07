@@ -26,6 +26,7 @@ import logoImg from '../../assets/logo.png';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
 import getValidationErrors from '../../utils/getValidationErrors';
+import { useAuth } from '../../hooks/auth';
 
 interface SignInFormData {
   email: string;
@@ -36,6 +37,7 @@ const SignIn: React.FC = () => {
   const navigation = useNavigation();
   const formRef = useRef<FormHandles>(null);
   const passwordInputRef = useRef<TextInput>(null);
+  const { signIn, user } = useAuth();
 
   const handleSignIn = useCallback(
     async (data: SignInFormData) => {
@@ -48,12 +50,10 @@ const SignIn: React.FC = () => {
           password: Yup.string().min(6, 'No mínimo 6 digitos'),
         });
         await schema.validate(data, { abortEarly: false });
-        const response = await signIn({
+        await signIn({
           email: data.email,
           password: data.password,
         });
-        console.log(response);
-        // navigation.navigate('/dashboard');
       } catch (err) {
         if (err instanceof Yup.ValidationError) {
           const validationErrors = getValidationErrors(err);
@@ -65,14 +65,9 @@ const SignIn: React.FC = () => {
           'Erro na autentição',
           'Ocorreu um erro ao fazer login, cheque as credenciais',
         );
-        /* addToast({
-          type: 'error',
-          title: 'Aconteceu um erro',
-          description: 'Ocorreu um erro ao fazer login, cheque as credenciais',
-        }); */
       }
     },
-    [navigation],
+    [signIn],
   );
   return (
     <>
