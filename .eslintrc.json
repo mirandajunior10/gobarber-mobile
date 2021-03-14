@@ -29,6 +29,7 @@
     "@typescript-eslint"
   ],
   "rules": {
+    "indent": "off",
     "no-unused-expressions": "off",
     "operator-linebreak": "off",
     "implicit-arrow-linebreak": "off",
@@ -39,6 +40,7 @@
     "react/prop-types": "off",
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "warn",
+    "camelcase": "off",
     "react/jsx-filename-extension": [
       1,
       {
