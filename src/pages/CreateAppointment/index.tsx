@@ -16,6 +16,8 @@ import {
   ProviderName,
   Calendar,
   Title,
+  OpenDatePickerButton,
+  OpenDatePickerButtonText,
 } from './styles';
 import { useAuth } from '../../hooks/auth';
 import api from '../../services/api';
@@ -31,6 +33,8 @@ export interface Provider {
 
 const CreateAppointment: React.FC = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+
   const [providers, setProviders] = useState<Provider[]>([]);
   const { user } = useAuth();
   const route = useRoute();
@@ -44,6 +48,19 @@ const CreateAppointment: React.FC = () => {
   const handleSelectProvider = useCallback((providerId: string) => {
     setSelectedProvider(providerId);
   }, []);
+
+  const handleToggleDatePicker = useCallback(() => {
+    setShowDatePicker(state => !state);
+  }, []);
+  const handleDateChanged = useCallback(
+    (event: Event, date: Date | undefined) => {
+      if (Platform.OS === 'android') {
+        setShowDatePicker(false);
+      }
+      date && setSelectedDate(date);
+    },
+    [],
+  );
 
   useEffect(() => {
     api.get<Provider[]>('providers').then(response => {
@@ -91,12 +108,18 @@ const CreateAppointment: React.FC = () => {
       </ProviderListContainer>
       <Calendar>
         <Title>Escolha a data</Title>
+        <OpenDatePickerButton onPress={handleToggleDatePicker}>
+          <OpenDatePickerButtonText>
+            Selecionar outra data
+          </OpenDatePickerButtonText>
+        </OpenDatePickerButton>
         {showDatePicker && (
           <DateTimePicker
-            {...(Platform.OS === 'ios' && { textColor: '#f4ede8' })}
             mode="date"
             display={Platform.OS === 'android' ? 'calendar' : 'spinner'}
-            value={new Date()}
+            onChange={handleDateChanged}
+            {...(Platform.OS === 'ios' && { textColor: '#f4ede8' })}
+            value={selectedDate}
           />
         )}
       </Calendar>
