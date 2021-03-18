@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Feather';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { Platform } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import { format } from 'date-fns';
 import {
   Container,
@@ -26,6 +26,8 @@ import {
   SectionContent,
   Hour,
   HourText,
+  CreateAppointmentButton,
+  CreateAppointmentButtonText,
 } from './styles';
 import { useAuth } from '../../hooks/auth';
 import api from '../../services/api';
@@ -52,7 +54,7 @@ const CreateAppointment: React.FC = () => {
   const [availability, setAvailability] = useState<AvailabilityItem[]>([]);
   const { user } = useAuth();
   const route = useRoute();
-  const { goBack } = useNavigation();
+  const { navigate, goBack } = useNavigation();
 
   const routeParams = route.params as RouteParams;
   const [selectedProvider, setSelectedProvider] = useState(
@@ -102,6 +104,27 @@ const CreateAppointment: React.FC = () => {
   const handleSelectHour = useCallback((hour: number) => {
     setSelectedHour(hour);
   }, []);
+
+  const handleCreateAppointment = useCallback(async () => {
+    try {
+      const date = new Date(selectedDate);
+      date.setHours(selectedHour);
+      date.setMinutes(0);
+      console.log(date);
+      const response = await api.post('appointments', {
+        provider_id: selectedProvider,
+        date,
+      });
+      console.log(response.data);
+      navigate('AppointmentCreated', { date: date.getTime() });
+    } catch (err) {
+      console.log(err);
+      Alert.alert(
+        'Erro ao criar agendamento',
+        'Ocorreu um erro ao tentar criar o agendamento, tente novamente',
+      );
+    }
+  }, [selectedDate, selectedHour, selectedProvider, navigate]);
 
   const morningAvailability = useMemo(
     () =>
@@ -166,6 +189,7 @@ const CreateAppointment: React.FC = () => {
             )}
           />
         </ProviderListContainer>
+
         <Calendar>
           <Title>Escolha a data</Title>
           <OpenDatePickerButton onPress={handleToggleDatePicker}>
@@ -229,6 +253,9 @@ const CreateAppointment: React.FC = () => {
             </SectionContent>
           </Section>
         </Schedule>
+        <CreateAppointmentButton onPress={handleCreateAppointment}>
+          <CreateAppointmentButtonText>Agendar</CreateAppointmentButtonText>
+        </CreateAppointmentButton>
       </Content>
     </Container>
   );
