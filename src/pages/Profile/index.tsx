@@ -12,6 +12,12 @@ import Icon from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
 import { Form } from '@unform/mobile';
 import { FormHandles } from '@unform/core';
+import { launchImageLibrary } from 'react-native-image-picker';
+import Input from '../../components/Input';
+import Button from '../../components/Button';
+import getValidationErrors from '../../utils/getValidationErrors';
+import api from '../../services/api';
+import { useAuth } from '../../hooks/auth';
 import {
   Container,
   Title,
@@ -19,11 +25,6 @@ import {
   UserAvatar,
   BackButton,
 } from './styles';
-import Input from '../../components/Input';
-import Button from '../../components/Button';
-import getValidationErrors from '../../utils/getValidationErrors';
-import api from '../../services/api';
-import { useAuth } from '../../hooks/auth';
 
 interface ProfileFormData {
   name: string;
@@ -41,7 +42,7 @@ const SignUp: React.FC = () => {
   const confirmPasswordInputRef = useRef<TextInput>(null);
   const emailInputRef = useRef<TextInput>(null);
 
-  const handleSignIn = useCallback(
+  const handleUpdateProfile = useCallback(
     async (data: ProfileFormData) => {
       try {
         formRef.current?.setErrors({});
@@ -99,6 +100,44 @@ const SignUp: React.FC = () => {
     [goBack, updateUser],
   );
 
+  const handleUpdateAvatar = useCallback(() => {
+    launchImageLibrary(
+      {
+        mediaType: 'photo',
+      },
+      async response => {
+        if (response.didCancel) {
+          return;
+        }
+        if (response.errorCode) {
+          switch (response.errorCode) {
+            case 'camera_unavailable':
+              Alert.alert('Câmera indisponível.');
+              return;
+            case 'permission':
+              Alert.alert(
+                'Nós precisamos da sua permissão para acessar a câmera.',
+              );
+              return;
+            default:
+              Alert.alert('Erro ao atualizar avatar.');
+
+              break;
+          }
+        }
+        const data = new FormData();
+        data.append('avatar', {
+          type: 'image/jpeg',
+          name: `${user.id}.jpg`,
+          uri: response.uri,
+        });
+        const apiResponse = await api.patch('/users/avatar', data);
+
+        updateUser(apiResponse.data);
+      },
+    );
+  }, [user, updateUser]);
+
   const handleGoBack = useCallback(() => {
     goBack();
   }, [goBack]);
@@ -117,14 +156,18 @@ const SignUp: React.FC = () => {
             <BackButton onPress={handleGoBack}>
               <Icon name="chevron-left" size={24} color="#999591" />
             </BackButton>
-            <UserAvatarButton>
+            <UserAvatarButton onPress={handleUpdateAvatar}>
               <UserAvatar source={{ uri: user.avatar_url }} />
             </UserAvatarButton>
             <View>
               <Title>Meu perfil</Title>
             </View>
 
-            <Form initialData={user} ref={formRef} onSubmit={handleSignIn}>
+            <Form
+              initialData={user}
+              ref={formRef}
+              onSubmit={handleUpdateProfile}
+            >
               <Input
                 autoCapitalize="words"
                 name="name"
